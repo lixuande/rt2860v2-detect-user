@@ -1,3 +1,18 @@
+/*--------------------------------------------------------
+ *  Copyright(C) 2018 EASTCOM-BUPT Inc.
+ *
+ *  Author      : even li
+ *  Description : even li at ebupt.com
+ *  History     : 2015-04-12 Created
+ *
+ *   Module Name:
+ *   rt2860v2-detect-user
+ *
+ *   Abstract:
+ *   receive detect data from kernel
+ *
+ *--------------------------------------------------------
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -12,6 +27,7 @@ struct msg_to_kernel
     struct nlmsghdr hdr;
     char data[MSG_LEN];
 };
+
 struct u_packet_info
 {
     struct nlmsghdr hdr;
@@ -39,10 +55,9 @@ static int netlink_usage(void)
 	return 1;
 }
 
-void get_wifi_state(void)
-{
+//get sta status e.x mac rssi 
+void get_wifi_state(void){
 	char *data = "g";
-    //³õÊ¼»¯
     struct sockaddr_nl local;
     struct sockaddr_nl kpeer;
     int skfd, ret, kpeerlen = sizeof(struct sockaddr_nl);
@@ -51,9 +66,9 @@ void get_wifi_state(void)
     char *retval;
     int len=0;
 
-		apguy_type state = NULL_TYPE;
+	apguy_type state = NULL_TYPE;
 
-		message = (struct nlmsghdr *)malloc(1);
+	message = (struct nlmsghdr *)malloc(1);
 
     skfd = socket(PF_NETLINK, SOCK_RAW, NETLINK_TEST);
     if(skfd < 0){
@@ -88,12 +103,10 @@ void get_wifi_state(void)
         exit(-1);
     }
 
-    while(recvfrom(skfd, &info, sizeof(struct u_packet_info),0, (struct sockaddr*)&kpeer, &kpeerlen))
-		{
+    while(recvfrom(skfd, &info, sizeof(struct u_packet_info),0, (struct sockaddr*)&kpeer, &kpeerlen)){
     	len=strlen(info.msg);
     	//printHex(info.msg, len);
-    	switch(info.msg[0])
-    	{
+    	switch(info.msg[0]){
     		case 4:
     			//data frame
     			printf("%02x:%02x:%02x:%02x:%02x:%02x %d %d %d %d %dM %d %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[10], info.msg[11] ,info.msg[12], info.msg[13], info.msg[13]);
@@ -104,6 +117,9 @@ void get_wifi_state(void)
     			return;
     			
     		default:
+                printf("this is not stat status, msg is %s\n", info.msg);
+                close(skfd);
+                return;
     			break;
     	}
     	fflush(stdout);
@@ -112,8 +128,7 @@ void get_wifi_state(void)
     close(skfd);
 }
 
-void listen_wifi_events(void)
-{
+void listen_wifi_events(void){
 	struct sockaddr_nl local;
     struct sockaddr_nl kpeer;
     int skfd, ret, kpeerlen = sizeof(struct sockaddr_nl);
@@ -139,12 +154,10 @@ void listen_wifi_events(void)
 	kpeer.nl_pid = 0;
 	kpeer.nl_groups = 1;
 	
-	while(recvfrom(skfd, &info, sizeof(struct u_packet_info),0, (struct sockaddr*)&kpeer, &kpeerlen))
-	{
+	while(recvfrom(skfd, &info, sizeof(struct u_packet_info),0, (struct sockaddr*)&kpeer, &kpeerlen)){
     	len=strlen(info.msg);
     	//printHex(info.msg, len);
-    	switch(info.msg[0])
-    	{
+    	switch(info.msg[0]){
     		case 1:
     			//data frame
     			printf("DATA====> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
@@ -187,67 +200,43 @@ void listen_wifi_events(void)
 	close(skfd);
 }
 
-void set_wifi_maxclients(char max)
-{
+void set_wifi_maxclients(char max){
 	//todo
 }
 
-
-
-int main(int argc, char* argv[]) 
-{
-    char *data = "This message is from eric's space";
-    //³õÊ¼»¯
-    struct sockaddr_nl local;
-    struct sockaddr_nl kpeer;
-    int skfd, ret, kpeerlen = sizeof(struct sockaddr_nl);
-    struct nlmsghdr *message;
-    struct u_packet_info info;
-    char *retval;
-    int len=0;
-
+int main(int argc, char* argv[]) {
 	apguy_type state = NULL_TYPE;
 
-	if(argv[1] == NULL)
-        {
-                return netlink_usage();
-        }
+	if(argv[1] == NULL){
+        return netlink_usage();
+    }
 	
-	if(strcmp(argv[1], "-g") == 0)
-	{
+	if(strcmp(argv[1], "-g") == 0){
 		state=STATE_TYPE;
 	}
 	
-	if(strcmp(argv[1], "-l") == 0)
-	{
+	if(strcmp(argv[1], "-l") == 0){
 		state=LISTEN_TYPE;
 	}
 	
-	if(strcmp(argv[1], "-m") == 0)
-	{
+	if(strcmp(argv[1], "-m") == 0){
 		state=MAXCLIENT_TYPE;
 	}
 	
-	if(state == NULL_TYPE)
-	{
+	if(state == NULL_TYPE){
 		return netlink_usage();
 	}
 		
-	if (state == STATE_TYPE)
-	{
+	if (state == STATE_TYPE){
 		get_wifi_state();
 	}
-	else if (state == LISTEN_TYPE)
-	{
+	else if (state == LISTEN_TYPE){
 		listen_wifi_events();
 	}
-	else if (state == MAXCLIENT_TYPE)
-	{
+	else if (state == MAXCLIENT_TYPE){
 		char max=64;
 		set_wifi_maxclients(max);
-	}
-	else
-	{
+	}else{
 		printf("error--------------\n");
 	}
     
