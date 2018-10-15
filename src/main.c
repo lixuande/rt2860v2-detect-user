@@ -22,28 +22,24 @@
 #define NETLINK_TEST 17
 #define MSG_LEN 512
 
-struct msg_to_kernel
-{
+struct msg_to_kernel{
     struct nlmsghdr hdr;
     char data[MSG_LEN];
 };
 
-struct u_packet_info
-{
+struct u_packet_info{
     struct nlmsghdr hdr;
     unsigned char msg[MSG_LEN];
 };
 
-typedef enum APGUY_TYPE
-{
+typedef enum APGUY_TYPE{
 	NULL_TYPE,
 	LISTEN_TYPE,
 	MAXCLIENT_TYPE,
 	STATE_TYPE
 }apguy_type;
 
-static int netlink_usage(void)
-{
+static int netlink_usage(void){
 	fprintf(stderr, "Usage: (null) [options]\n"
 		"Options:\n"
 		" -l :		                  Listen and monitor WIFI client events\n"
