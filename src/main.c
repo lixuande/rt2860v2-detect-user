@@ -150,36 +150,38 @@ void listen_wifi_events(void){
 	kpeer.nl_pid = 0;
 	kpeer.nl_groups = 1;
 	
+    //接收驱动发送上来的是各种协议帧：msg数组第一个字符标示帧的类型，第二个字符标示这种帧类型下的具体帧类型。
+    // msg第一个字符：1 数据帧 2 管理帧 3 控制帧 
+    // msg第二个字符：0 associate帧，2 reassociate帧，4 probe帧，8 beacon帧，10 disassociate帧
 	while(recvfrom(skfd, &info, sizeof(struct u_packet_info),0, (struct sockaddr*)&kpeer, &kpeerlen)){
     	len=strlen(info.msg);
     	//printHex(info.msg, len);
     	switch(info.msg[0]){
     		case 1:
-    			//data frame
+    			//数据帧
     			printf("DATA====> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
     			break;
     			
     		case 2:
-    			//mgmgt frame
-    			switch(info.msg[1])
-    			{
-    					case 0:
-    						printf("ASSOC===> (0002) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
-    						break;
-    					case 2:
-    						printf("REASSOC===> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
-    						break;
-    					case 4:
-    						printf("PROBE===> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
-    						break;
-    					case 8:
-    						printf("BEACON==> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
-    						break;
-    					case 10:
-    						printf("DISASSOC=> (0002) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
-    						break;
-    					default:
-    						break;
+    			//管理帧
+    			switch(info.msg[1]){
+					case 0:
+						printf("ASSOC===> (0002) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
+						break;
+					case 2:
+						printf("REASSOC===> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
+						break;
+					case 4:
+						printf("PROBE===> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
+						break;
+					case 8:
+						printf("BEACON==> (-001) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
+						break;
+					case 10:
+						printf("DISASSOC=> (0002) [%02x:%02x:%02x:%02x:%02x:%02x] RSSI:{-%d,-%d,-99} SNR:%d, %d, %d\n", info.msg[2], info.msg[3], info.msg[4], info.msg[5], info.msg[6], info.msg[7], info.msg[8], info.msg[9], info.msg[11], info.msg[12], info.msg[13]);
+						break;
+					default:
+						break;
     			}
     			break;
     	
@@ -191,6 +193,7 @@ void listen_wifi_events(void){
     		default:
     			break;
     	}
+        //强制输出，刷新缓存区，保证数据实时
     	fflush(stdout);
     }
 	close(skfd);
